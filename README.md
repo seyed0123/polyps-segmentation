@@ -209,7 +209,7 @@ The most notable improvement is the **IoU score**, which jumped from approximate
 ## Results
 
 
-![](Curve.png)
+![](curve.png)
 
 ### Loss Plot
 
@@ -226,3 +226,4 @@ The IoU (Intersection over Union) plot shows the model's segmentation accuracy o
 ### Dice Score Plot
 
 The Dice Score plot reinforces the findings from the IoU plot. The **Dice Score** is especially useful for imbalanced datasets, as it provides a better measure of accuracy for the minority class (the polyps) than simple pixel-level accuracy. The plot shows a consistent increase throughout training for both the training and validation curves, with the final validation Dice Score reaching approximately **0.96**. This score, like the IoU, confirms the model's strong performance in accurately segmenting the polyps and its ability to handle the class imbalance present in the dataset.
+
