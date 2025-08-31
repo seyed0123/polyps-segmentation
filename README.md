@@ -110,7 +110,7 @@ Based on the Jupyter notebook you provided, I've updated the report with the cor
 
 ### Baseline Model
 
-The baseline model for this project is a **UNet** architecture. UNet is a fully convolutional neural network commonly used in biomedical image segmentation. It consists of a contracting path (encoder) that captures contextual information and an expanding path (decoder) that enables precise localization. The encoder uses a series of convolutional layers and max-pooling operations, while the decoder utilizes up-sampling convolutions combined with skip connections. These **skip connections** pass feature maps from the encoder to the decoder, which is crucial for preserving spatial details and accurately segmenting polyp boundaries at the pixel level.
+The baseline model for this project is a **ResUNet** architecture. UNet is a fully convolutional neural network commonly used in biomedical image segmentation. It consists of a contracting path (encoder) that captures contextual information and an expanding path (decoder) that enables precise localization. The encoder uses a series of convolutional layers and max-pooling operations, while the decoder utilizes up-sampling convolutions combined with skip connections. These **skip connections** pass feature maps from the encoder to the decoder, which is crucial for preserving spatial details and accurately segmenting polyp boundaries at the pixel level.
 
 ---
 
@@ -132,9 +132,8 @@ This hybrid loss function provides a balanced approach: BCE ensures accurate pix
 
 After training the baseline UNet model for 100 epochs, the initial results show a good performance, with both training and validation metrics demonstrating steady improvement. The model's performance is summarized by the following metrics:
 
-- **Validation Loss:** 0.28
-- **Validation Dice Score:** 0.83
-- **Validation Accuracy:** 0.95
+- **Validation Loss:** 0.18
+- **Validation Dice Score:** 0.86
 - **Validation IoU:** ~0.77
 
 The validation loss steadily decreased throughout the training process, indicating that the model was successfully learning to segment the polyps. As the loss decreased, the key performance metrics, including **IoU**, **Dice Score**, and **Accuracy**, consistently increased.
@@ -149,7 +148,7 @@ The training history plots provide a clear visual representation of the model's 
 
 ![](Loss.png)
 
-The Loss plot illustrates the training and validation loss over 100 epochs . The plot shows a steady and consistent decrease in both curves, indicating that the model is effectively learning to minimize the error between its predicted segmentation masks and the ground truth. The close proximity of the two curves suggests that the model is not overfitting to the training data, which is a positive sign for its ability to generalize to new images.
+The Loss plot illustrates the training and validation loss over 20 epochs . The plot shows a steady and consistent decrease in both curves, indicating that the model is effectively learning to minimize the error between its predicted segmentation masks and the ground truth. The close proximity of the two curves suggests that the model is not overfitting to the training data, which is a positive sign for its ability to generalize to new images.
 It shows a continuous decline in both training and validation loss. The curves are relatively smooth, suggesting a stable training process without major oscillations. The minimal gap between the training and validation loss curves indicates that the model is not significantly overfitting to the training data. This is a positive sign for the model's ability to generalize to unseen images.
 
 
@@ -170,7 +169,7 @@ Overall, these initial results are promising. The UNet model, despite being a ba
 
 ![](Dice.png)
 
-The Dice Score plot reinforces the findings from the IoU plot . The Dice Score, also known as the F1-score, is particularly useful for imbalanced datasets, as it gives a better measure of accuracy for the minority class (the polyps). The plot shows a consistent increase throughout training, with the final validation Dice Score reaching approximately 0.83. This confirms the model's strong performance in accurately segmenting the polyps and its ability to handle the class imbalance present in the dataset.
+The Dice Score plot reinforces the findings from the IoU plot . The Dice Score, also known as the F1-score, is particularly useful for imbalanced datasets, as it gives a better measure of accuracy for the minority class (the polyps). The plot shows a consistent increase throughout training, with the final validation Dice Score reaching approximately 0.86. This confirms the model's strong performance in accurately segmenting the polyps and its ability to handle the class imbalance present in the dataset.
 
 
 
@@ -207,6 +206,7 @@ This project successfully developed an automated system for polyp segmentation i
 The enhanced **ResUNet model**, leveraging a **pretrained ResNet34 encoder** and a combined **Dice and BCE loss function**, significantly outperformed the baseline **UNet model**. The enhanced model achieved an IoU of 0.900, demonstrating its superior ability to accurately segment polyps across different imaging conditions and datasets. This high level of accuracy suggests that the model is robust and capable of handling real-world variations, making it a valuable tool for clinical application. The results confirm that utilizing a powerful, pretrained encoder and a loss function tailored for class imbalance are critical for achieving state-of-the-art performance in medical image segmentation.
 
 Future work could explore more advanced architectures, such as attention mechanisms or transformers, and incorporate different loss functions to further refine the segmentation boundaries. Additionally, testing the model on new, unseen datasets from different clinical settings would be essential to confirm its real-world generalizability. Ultimately, this project serves as a foundational step toward developing more sophisticated computer-aided diagnostic tools that can assist clinicians in the early detection and prevention of colorectal cancer.
+
 
 
 
