@@ -185,7 +185,10 @@ The enhanced model is a **ResUNet** architecture, a type of convolutional neural
 
 ### Model Architecture
 
-![](my_arch.pdf)
+
+
+![](my_arch.png)
+
 The core enhancement is replacing the basic convolutional encoder with a pre-trained **ResNet34** from the ImageNet dataset. This approach leverages transfer learning, allowing the model to benefit from features learned on a large, diverse dataset and converge more quickly. The decoder path mirrors the structure of a standard UNet but is enhanced with a **DoubleConv** class. This class uses two sequential `Conv2d` layers followed by batch normalization and a ReLU activation function, which helps the model learn more robust features in the upsampling path.
 
 ### Loss Function and Optimizer
@@ -252,4 +255,5 @@ A key observation is the model's robustness in handling different polyp sizes, s
 * **Small Polyps:** The model successfully identifies and segments even small polyps that occupy a very minor portion of the image. This is a critical capability for early detection.
 * **Large Polyps:** For larger polyps, the model accurately segments the entire lesion, capturing its complex shape and surface texture. The segmentation is smooth, avoiding jagged or incomplete boundaries.
 * **Challenging Conditions:** The model performs well on images with varying brightness, reflections, and tissue texture. This indicates that the data augmentation and use of a pretrained ResNet34 encoder have helped the model generalize effectively to different endoscopic conditions.
+
 
