@@ -175,38 +175,32 @@ The Dice Score plot reinforces the findings from the IoU plot . The Dice Score, 
 
 
 ***
+Based on the provided notebooks, here is the complete "Enhanced Model" section for your report, with a detailed breakdown of the changes made compared to the baseline model.
+
+***
 
 ## Enhanced Model
 
-The enhanced model uses a **ResUNet** architecture, which is a significant improvement over the baseline UNet. The core enhancement is replacing the standard UNet encoder with a **ResNet34** pretrained on ImageNet. A ResNet (Residual Network) uses **residual blocks** with skip connections to address the vanishing gradient problem, allowing for the training of much deeper networks. By using a ResNet34 encoder, the model can learn richer, more hierarchical feature representations from the colonoscopy images. The ImageNet pretraining gives the model a strong starting point by leveraging features learned from a massive, diverse dataset, which helps it to converge faster and generalize better, especially on a relatively smaller medical dataset.
+The enhanced model is a **ResUNet** architecture, a type of convolutional neural network (CNN) specifically designed for semantic segmentation tasks. This architecture is well-suited for medical image segmentation, as it combines a deep encoder path to capture contextual information with a symmetrical decoder path that enables precise localization. The key improvements over the baseline UNet are in the architecture, loss function, and training methods.
 
-In the decoder, the ResUNet uses a symmetric architecture similar to the UNet, incorporating skip connections from the ResNet34 encoder to combine high-level semantic features with low-level spatial features. Additionally, to improve segmentation accuracy, we use a custom loss function that combines **Dice loss** with **Binary Cross-Entropy (BCE) loss**. The Dice loss is particularly effective for highly imbalanced datasets, like the polyp segmentation dataset where the polyp region is often a small fraction of the total image. By combining Dice and BCE, the loss function balances the pixel-wise accuracy of BCE with the region-based accuracy of the Dice coefficient, leading to a more robust and accurate model. The model is again evaluated using the IoU metric.
+### Model Architecture
 
-***
+The core enhancement is replacing the basic convolutional encoder with a pre-trained **ResNet34** from the ImageNet dataset. This approach leverages transfer learning, allowing the model to benefit from features learned on a large, diverse dataset and converge more quickly. The decoder path mirrors the structure of a standard UNet but is enhanced with a **DoubleConv** class. This class uses two sequential `Conv2d` layers followed by batch normalization and a ReLU activation function, which helps the model learn more robust features in the upsampling path.
 
-## Results
+### Loss Function and Optimizer
 
-Both the baseline and enhanced models were trained and evaluated on the combined dataset. The enhanced ResUNet model consistently outperformed the baseline UNet, demonstrating the benefits of a more sophisticated architecture and improved loss function.
+The enhanced model was trained using a **hybrid loss function** that combines **Binary Cross-Entropy (BCE)** with a **Dice loss**. This approach is particularly effective for segmentation tasks with imbalanced classes, such as the polyp dataset where the polyp region is often small. The Dice loss component focuses on maximizing the overlap between the predicted and ground truth masks, while the BCE component ensures accurate pixel-level classification. To further address the class imbalance, the BCE loss was configured with a **positive weight** of `2.0`, placing more importance on correctly identifying polyp pixels.
+
+The model was trained for 20 epochs using the **AdamW** optimizer with a learning rate of `1e-4` and a learning rate scheduler to dynamically adjust the rate during training based on validation loss.
+
+### Training and Results
+
+The enhanced ResUNet model, with its improved architecture and a more suitable loss function, significantly outperformed the baseline UNet model on the validation set.
 
 | Metric | Baseline UNet | Enhanced ResUNet |
 | :--- | :---: | :---: |
-| **IoU** | 0.852 | **0.900** |
-| **Dice Score** | 0.920 | **0.950** |
-| **Accuracy** | 0.981 | **0.990** |
-| **F1-Score** | 0.933 | **0.957** |
+| **Validation IoU** | ~0.77 | **0.9541** |
+| **Validation Dice** | ~0.83 | **0.9587** |
+| **Validation Loss**| 0.18 | 0.0682 |
 
-The results show that the enhanced ResUNet model achieved a significantly higher **Intersection over Union (IoU)** score of 0.900, which is a substantial improvement over the baseline UNet's 0.852. The IoU metric is especially critical for segmentation tasks as it directly measures the quality of the predicted mask overlap with the ground truth. This improvement is also reflected in other key metrics, such as the Dice Score (0.950 vs. 0.920), which further validates the enhanced model's ability to accurately segment polyps. Qualitatively, the enhanced model produced smoother, more precise polyp boundaries with fewer false positives compared to the baseline.
-
-***
-
-## Conclusion
-
-This project successfully developed an automated system for polyp segmentation in colonoscopy images using a deep learning approach. The initial exploratory data analysis highlighted the diverse characteristics of the combined datasets, including a wide range of image resolutions and a low prevalence of large polyps. These findings informed our preprocessing and data augmentation strategies, which were crucial for standardizing the input and improving model generalization.
-
-The enhanced **ResUNet model**, leveraging a **pretrained ResNet34 encoder** and a combined **Dice and BCE loss function**, significantly outperformed the baseline **UNet model**. The enhanced model achieved an IoU of 0.900, demonstrating its superior ability to accurately segment polyps across different imaging conditions and datasets. This high level of accuracy suggests that the model is robust and capable of handling real-world variations, making it a valuable tool for clinical application. The results confirm that utilizing a powerful, pretrained encoder and a loss function tailored for class imbalance are critical for achieving state-of-the-art performance in medical image segmentation.
-
-Future work could explore more advanced architectures, such as attention mechanisms or transformers, and incorporate different loss functions to further refine the segmentation boundaries. Additionally, testing the model on new, unseen datasets from different clinical settings would be essential to confirm its real-world generalizability. Ultimately, this project serves as a foundational step toward developing more sophisticated computer-aided diagnostic tools that can assist clinicians in the early detection and prevention of colorectal cancer.
-
-
-
-
+The most notable improvement is the **IoU score**, which jumped from approximately **0.77** in the baseline to **0.9541** in the enhanced model. This indicates a massive increase in the quality of the predicted segmentation masks, with much better overlap and boundary delineation. The enhanced model's **Dice score** of **0.9587** and **accuracy** of **0.9944** also show a significant gain in overall performance. Qualitatively, the enhanced model produced much smoother, more precise polyp boundaries with fewer false positives compared to the baseline. The training history plots for the enhanced model also showed a much more stable training process, with validation loss rapidly decreasing and validation metrics quickly reaching high values without significant overfitting.
