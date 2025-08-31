@@ -108,11 +108,57 @@ Based on the Jupyter notebook you provided, I've updated the report with the cor
 
 ***
 
-## Baseline Model
+### Baseline Model
 
-The baseline model for this project is a **UNet** architecture. UNet is a popular convolutional neural network designed specifically for biomedical image segmentation. Its architecture consists of a contracting path (encoder) that captures context by repeatedly applying convolutions and max-pooling, and a symmetric expanding path (decoder) that enables precise localization by using transposed convolutions to upsample the feature maps.
+The baseline model for this project is a **UNet** architecture. UNet is a fully convolutional neural network commonly used in biomedical image segmentation. It consists of a contracting path (encoder) that captures contextual information and an expanding path (decoder) that enables precise localization. The encoder uses a series of convolutional layers and max-pooling operations, while the decoder utilizes up-sampling convolutions combined with skip connections. These **skip connections** pass feature maps from the encoder to the decoder, which is crucial for preserving spatial details and accurately segmenting polyp boundaries at the pixel level.
 
-A key feature of the UNet is the **skip connections** that link the feature maps from the encoder to the decoder at each stage. These connections provide the decoder with high-resolution features from earlier layers, which is crucial for accurately localizing the boundaries of the polyps. For this baseline, we utilize a standard UNet with a simple convolutional encoder. The model is trained to minimize the **Binary Cross-Entropy (BCE) loss** between the predicted segmentation mask and the ground truth mask. The BCE loss is a common choice for binary segmentation tasks as it measures the pixel-wise difference between the two masks. The model's performance is evaluated using the **Intersection over Union (IoU)** metric, also known as the Jaccard index, which measures the overlap between the predicted and true masks. A higher IoU indicates better segmentation accuracy.
+---
+
+### Methods and Loss Functions
+
+The baseline model utilizes a series of well-established methods for training a segmentation network. The core architecture is the **UNet**, which is a powerful choice for pixel-level tasks due to its ability to capture both high-level semantic information and fine-grained spatial details. The model is trained using the **Adam optimizer** with a learning rate of $1 \times 10^{-4}$ to iteratively minimize the loss function.
+
+The chosen loss function is a combination of **Binary Cross-Entropy (BCE) loss** and **Dice loss**.
+$L_{total} = L_{BCE} + L_{Dice}$
+
+* **Binary Cross-Entropy (BCE) loss** measures the pixel-wise difference between the predicted mask and the ground truth mask. It penalizes each pixel's classification independently and is effective for learning general image features.
+* **Dice loss** is a region-based metric that measures the overlap between the predicted and ground truth masks. It is particularly effective for highly imbalanced datasets where the region of interest (in this case, the polyp) occupies only a small portion of the total image. The Dice loss penalizes a model more for failing to detect a small polyp than a large background area, thus encouraging better segmentation of the target class.
+
+This hybrid loss function provides a balanced approach: BCE ensures accurate pixel-level classification while the Dice loss guides the model to achieve a better overall segmentation shape, leading to a more robust model.
+
+---
+
+### Initial Results and Analysis
+
+After training the baseline UNet model for 100 epochs, the initial results show a good performance, with both training and validation metrics demonstrating steady improvement. The model's performance is summarized by the following metrics:
+
+- **Validation Loss:** 0.28
+- **Validation Dice Score:** 0.83
+- **Validation Accuracy:** 0.95
+- **Validation IoU:** ~0.77
+
+The validation loss steadily decreased throughout the training process, indicating that the model was successfully learning to segment the polyps. As the loss decreased, the key performance metrics, including **IoU**, **Dice Score**, and **Accuracy**, consistently increased.
+
+#### Analysis of Plots
+
+The training history plots provide a clear visual representation of the model's learning progress.
+
+
+
+**Training & Validation Loss:** The plot shows a continuous decline in both training and validation loss. The curves are relatively smooth, suggesting a stable training process without major oscillations. The minimal gap between the training and validation loss curves indicates that the model is not significantly overfitting to the training data. This is a positive sign for the model's ability to generalize to unseen images.
+
+
+
+**Training & Validation IoU:** The IoU plot shows a consistent increase, starting from a low value and climbing to its peak at the end of training. The final validation IoU of approximately 0.77 is a strong result for a baseline model, indicating that the model is already capable of accurately identifying and segmenting the majority of polyp regions. The upward trend for both training and validation IoU curves further confirms that the model is learning effectively and that the chosen hyperparameters and loss function are well-suited for the task.
+
+Overall, these initial results are promising. The UNet model, despite being a baseline, demonstrates a strong capability for polyp segmentation on the combined dataset. The stable performance and high IoU suggest that the data preprocessing, model architecture, and training methods are a solid foundation for further enhancements.
+
+
+
+
+
+
+
 
 ***
 
@@ -146,3 +192,4 @@ This project successfully developed an automated system for polyp segmentation i
 The enhanced **ResUNet model**, leveraging a **pretrained ResNet34 encoder** and a combined **Dice and BCE loss function**, significantly outperformed the baseline **UNet model**. The enhanced model achieved an IoU of 0.900, demonstrating its superior ability to accurately segment polyps across different imaging conditions and datasets. This high level of accuracy suggests that the model is robust and capable of handling real-world variations, making it a valuable tool for clinical application. The results confirm that utilizing a powerful, pretrained encoder and a loss function tailored for class imbalance are critical for achieving state-of-the-art performance in medical image segmentation.
 
 Future work could explore more advanced architectures, such as attention mechanisms or transformers, and incorporate different loss functions to further refine the segmentation boundaries. Additionally, testing the model on new, unseen datasets from different clinical settings would be essential to confirm its real-world generalizability. Ultimately, this project serves as a foundational step toward developing more sophisticated computer-aided diagnostic tools that can assist clinicians in the early detection and prevention of colorectal cancer.
+
