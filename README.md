@@ -204,3 +204,25 @@ The enhanced ResUNet model, with its improved architecture and a more suitable l
 | **Validation Loss**| 0.18 | 0.0682 |
 
 The most notable improvement is the **IoU score**, which jumped from approximately **0.77** in the baseline to **0.9541** in the enhanced model. This indicates a massive increase in the quality of the predicted segmentation masks, with much better overlap and boundary delineation. The enhanced model's **Dice score** of **0.9587** and **accuracy** of **0.9944** also show a significant gain in overall performance. Qualitatively, the enhanced model produced much smoother, more precise polyp boundaries with fewer false positives compared to the baseline. The training history plots for the enhanced model also showed a much more stable training process, with validation loss rapidly decreasing and validation metrics quickly reaching high values without significant overfitting.
+
+
+## Results
+
+
+![](Curve.png)
+
+### Loss Plot
+
+The loss plot shows the training and validation loss over 20 epochs. The **training loss** (blue line) decreases rapidly and consistently, while the **validation loss** (orange line) also decreases, but with more minor fluctuations. Both curves converge to a very low value, indicating that the model is effectively learning and that its performance is stable. The minimal gap between the training and validation loss suggests that the model is **not overfitting** to the training data.
+
+***
+
+### IoU Plot
+
+The IoU (Intersection over Union) plot shows the model's segmentation accuracy over the 20 epochs. Both the **training IoU** (blue line) and **validation IoU** (orange line) increase quickly and then stabilize at a high value. The final validation IoU of approximately **0.95** indicates excellent performance in accurately segmenting polyps, with a high degree of overlap between the predicted and ground truth masks. The consistent upward trend and the lack of a significant gap between the curves confirm a robust and effective learning process.
+
+***
+
+### Dice Score Plot
+
+The Dice Score plot reinforces the findings from the IoU plot. The **Dice Score** is especially useful for imbalanced datasets, as it provides a better measure of accuracy for the minority class (the polyps) than simple pixel-level accuracy. The plot shows a consistent increase throughout training for both the training and validation curves, with the final validation Dice Score reaching approximately **0.96**. This score, like the IoU, confirms the model's strong performance in accurately segmenting the polyps and its ability to handle the class imbalance present in the dataset.
