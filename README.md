@@ -144,18 +144,26 @@ The validation loss steadily decreased throughout the training process, indicati
 The training history plots provide a clear visual representation of the model's learning progress.
 
 
+### Training and Validation Loss
 
-**Training & Validation Loss:** The plot shows a continuous decline in both training and validation loss. The curves are relatively smooth, suggesting a stable training process without major oscillations. The minimal gap between the training and validation loss curves indicates that the model is not significantly overfitting to the training data. This is a positive sign for the model's ability to generalize to unseen images.
+The Loss plot illustrates the training and validation loss over 100 epochs . The plot shows a steady and consistent decrease in both curves, indicating that the model is effectively learning to minimize the error between its predicted segmentation masks and the ground truth. The close proximity of the two curves suggests that the model is not overfitting to the training data, which is a positive sign for its ability to generalize to new images.
+It shows a continuous decline in both training and validation loss. The curves are relatively smooth, suggesting a stable training process without major oscillations. The minimal gap between the training and validation loss curves indicates that the model is not significantly overfitting to the training data. This is a positive sign for the model's ability to generalize to unseen images.
 
 
+***
 
-**Training & Validation IoU:** The IoU plot shows a consistent increase, starting from a low value and climbing to its peak at the end of training. The final validation IoU of approximately 0.77 is a strong result for a baseline model, indicating that the model is already capable of accurately identifying and segmenting the majority of polyp regions. The upward trend for both training and validation IoU curves further confirms that the model is learning effectively and that the chosen hyperparameters and loss function are well-suited for the task.
+### Intersection over Union (IoU)
+
+The IoU plot demonstrates the model's segmentation accuracy over time . The plot shows a continuous increase in both training and validation IoU, which measures the overlap between the predicted and actual polyp masks. This upward trend confirms that the model's performance is improving with each epoch. The final validation IoU of approximately 0.77 is a strong result for a baseline model, indicating a high degree of precision in polyp segmentation.
+It shows a consistent increase, starting from a low value and climbing to its peak at the end of training. The final validation IoU of approximately 0.77 is a strong result for a baseline model, indicating that the model is already capable of accurately identifying and segmenting the majority of polyp regions. The upward trend for both training and validation IoU curves further confirms that the model is learning effectively and that the chosen hyperparameters and loss function are well-suited for the task.
 
 Overall, these initial results are promising. The UNet model, despite being a baseline, demonstrates a strong capability for polyp segmentation on the combined dataset. The stable performance and high IoU suggest that the data preprocessing, model architecture, and training methods are a solid foundation for further enhancements.
 
+***
 
+### Dice Score
 
-
+The Dice Score plot reinforces the findings from the IoU plot . The Dice Score, also known as the F1-score, is particularly useful for imbalanced datasets, as it gives a better measure of accuracy for the minority class (the polyps). The plot shows a consistent increase throughout training, with the final validation Dice Score reaching approximately 0.83. This confirms the model's strong performance in accurately segmenting the polyps and its ability to handle the class imbalance present in the dataset.
 
 
 
@@ -192,4 +200,5 @@ This project successfully developed an automated system for polyp segmentation i
 The enhanced **ResUNet model**, leveraging a **pretrained ResNet34 encoder** and a combined **Dice and BCE loss function**, significantly outperformed the baseline **UNet model**. The enhanced model achieved an IoU of 0.900, demonstrating its superior ability to accurately segment polyps across different imaging conditions and datasets. This high level of accuracy suggests that the model is robust and capable of handling real-world variations, making it a valuable tool for clinical application. The results confirm that utilizing a powerful, pretrained encoder and a loss function tailored for class imbalance are critical for achieving state-of-the-art performance in medical image segmentation.
 
 Future work could explore more advanced architectures, such as attention mechanisms or transformers, and incorporate different loss functions to further refine the segmentation boundaries. Additionally, testing the model on new, unseen datasets from different clinical settings would be essential to confirm its real-world generalizability. Ultimately, this project serves as a foundational step toward developing more sophisticated computer-aided diagnostic tools that can assist clinicians in the early detection and prevention of colorectal cancer.
+
 
