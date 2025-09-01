@@ -104,8 +104,6 @@ Normalization is also performed to standardize pixel intensities. Specifically, 
 To further improve generalization, we apply a set of data augmentation techniques during training. These include horizontal and vertical flips, random rotations, brightness and contrast adjustments, HSV color shifts, Gaussian blur, and slight scaling or translations. Such augmentations simulate variations in patient anatomy, camera movement, and lighting conditions that naturally occur during endoscopic procedures. By exposing the model to these transformations, we reduce overfitting and enable it to better handle unseen clinical cases.
 
 
-Based on the Jupyter notebook you provided, I've updated the report with the correct model names and results. I have filled out the sections for "Baseline Model," "Enhanced Model," "Results," and "Conclusion" in markdown format.
-
 ***
 
 ### Baseline Model
@@ -255,6 +253,7 @@ A key observation is the model's robustness in handling different polyp sizes, s
 * **Small Polyps:** The model successfully identifies and segments even small polyps that occupy a very minor portion of the image. This is a critical capability for early detection.
 * **Large Polyps:** For larger polyps, the model accurately segments the entire lesion, capturing its complex shape and surface texture. The segmentation is smooth, avoiding jagged or incomplete boundaries.
 * **Challenging Conditions:** The model performs well on images with varying brightness, reflections, and tissue texture. This indicates that the data augmentation and use of a pretrained ResNet34 encoder have helped the model generalize effectively to different endoscopic conditions.
+
 
 
 
