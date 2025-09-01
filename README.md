@@ -172,11 +172,6 @@ The Dice Score plot reinforces the findings from the IoU plot . The Dice Score, 
 
 
 
-***
-Based on the provided notebooks, here is the complete "Enhanced Model" section for your report, with a detailed breakdown of the changes made compared to the baseline model.
-
-***
-
 ## Enhanced Model
 
 The enhanced model is a **ResUNet** architecture, a type of convolutional neural network (CNN) specifically designed for semantic segmentation tasks. This architecture is well-suited for medical image segmentation, as it combines a deep encoder path to capture contextual information with a symmetrical decoder path that enables precise localization. The key improvements over the baseline UNet are in the architecture, loss function, and training methods.
@@ -230,8 +225,6 @@ The IoU (Intersection over Union) plot shows the model's segmentation accuracy o
 The Dice Score plot reinforces the findings from the IoU plot. The **Dice Score** is especially useful for imbalanced datasets, as it provides a better measure of accuracy for the minority class (the polyps) than simple pixel-level accuracy. The plot shows a consistent increase throughout training for both the training and validation curves, with the final validation Dice Score reaching approximately **0.96**. This score, like the IoU, confirms the model's strong performance in accurately segmenting the polyps and its ability to handle the class imbalance present in the dataset.
 
 
-Based on the provided images, here is an explanation of the final samples.
-
 ### Final Sample Analysis
 
 The final samples showcase the performance of the enhanced model on various test images. Each sample is a set of three images: the **Original Image** (the input), the **Ground Truth Mask** (the correct segmentation manually created by experts), and the **Predicted Mask** (the model's output).
@@ -253,6 +246,7 @@ A key observation is the model's robustness in handling different polyp sizes, s
 * **Small Polyps:** The model successfully identifies and segments even small polyps that occupy a very minor portion of the image. This is a critical capability for early detection.
 * **Large Polyps:** For larger polyps, the model accurately segments the entire lesion, capturing its complex shape and surface texture. The segmentation is smooth, avoiding jagged or incomplete boundaries.
 * **Challenging Conditions:** The model performs well on images with varying brightness, reflections, and tissue texture. This indicates that the data augmentation and use of a pretrained ResNet34 encoder have helped the model generalize effectively to different endoscopic conditions.
+
 
 
 
