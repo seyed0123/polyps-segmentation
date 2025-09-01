@@ -116,9 +116,9 @@ process_dataset(image_paths3, mask_paths3, "mpsd")
 df = pd.DataFrame(data_info)
 ```
 
-    Processing kvasir: 100%|██████████| 1000/1000 [00:06<00:00, 157.83it/s]
-    Processing cvc: 100%|██████████| 612/612 [00:04<00:00, 141.47it/s]
-    Processing mpsd: 100%|██████████| 22330/22330 [01:30<00:00, 246.58it/s]
+    Processing kvasir: 100%|██████████| 1000/1000 [00:21<00:00, 46.35it/s]
+    Processing cvc: 100%|██████████| 612/612 [00:10<00:00, 59.63it/s]
+    Processing mpsd: 100%|██████████| 22330/22330 [03:37<00:00, 102.84it/s]
     
 
 
@@ -295,7 +295,10 @@ else:
 ```
 
     
-    Unique pixel values in masks: [  0   1   2   3   4   5   6   7 248 249 250 251 252 253 254 255]
+    Unique pixel values in masks: [  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  18
+      19  21  23  24  25  26  28  29  30  31  32  38  44  49  50  51  53  56
+      64  66  73  77  80  82  85  88  91  96  98 112 248 249 250 251 252 253
+     254 255]
     ⚠️ Masks have unexpected values!
     
 
@@ -367,10 +370,8 @@ for i, idx in enumerate(sample_idx):
 plt.tight_layout()
 ```
 
-    /tmp/ipykernel_36/2861692189.py:9: FutureWarning:
-    
-    The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
-    
+    /tmp/ipykernel_19/2861692189.py:9: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+      sample_idx = df.groupby(bins).apply(lambda x: x.sample(3, random_state=1)).index.get_level_values(1)
     
 
 
@@ -567,15 +568,6 @@ from albumentations.pytorch import ToTensorV2
 ```python
 class PolypDataset(Dataset):
     def __init__(self, datasets, transform=None, exts=("png","jpg","jpeg")):
-        """
-        General dataset for polyp segmentation.
-        Supports multiple datasets at once.
-
-        Args:
-            datasets: list of (image_dir, mask_dir) tuples
-            transform: Albumentations or similar transform
-            exts: allowed image extensions
-        """
         self.transform = transform
         self.image_paths = []
         self.mask_paths = []
@@ -586,19 +578,19 @@ class PolypDataset(Dataset):
             self.mask_paths.extend(mask_paths)
 
     def _load_dataset(self, image_dir, mask_dir, exts):
-        # Collect images
+        
         image_paths = []
         for ext in exts:
             image_paths.extend(glob(os.path.join(image_dir, f"*.{ext}")))
         image_paths = sorted(image_paths)
 
-        # Collect masks
+        
         mask_paths = []
         for ext in exts:
             mask_paths.extend(glob(os.path.join(mask_dir, f"*.{ext}")))
         mask_paths = sorted(mask_paths)
 
-        # Match by filename
+        
         image_names = [os.path.basename(p) for p in image_paths]
         mask_dict = {os.path.basename(p): p for p in mask_paths}
         matched = [(img, mask_dict[os.path.basename(img)]) for img in image_paths if os.path.basename(img) in mask_dict]
@@ -623,16 +615,16 @@ class PolypDataset(Dataset):
         return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
 
     def __getitem__(self, idx):
-        # Load image and mask
+        
         image = cv2.imread(self.image_paths[idx])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(self.mask_paths[idx], cv2.IMREAD_GRAYSCALE)
 
-        # Pad to square
+        
         image = self.pad_to_square(image)
         mask = self.pad_to_square(mask, color=(0,))
 
-        # Apply augmentations
+        
         if self.transform:
             augmented = self.transform(image=image, mask=mask)
             image, mask = augmented["image"], augmented["mask"]
@@ -666,10 +658,8 @@ val_transform = A.Compose([
 ])
 ```
 
-    /tmp/ipykernel_36/3157186758.py:5: UserWarning:
-    
-    Argument(s) 'value, mask_value' are not valid for transform ShiftScaleRotate
-    
+    /tmp/ipykernel_19/3157186758.py:5: UserWarning: Argument(s) 'value, mask_value' are not valid for transform ShiftScaleRotate
+      A.ShiftScaleRotate(
     
 
 
@@ -687,7 +677,6 @@ datasets = [
      "/kaggle/input/merged-polyp-segmentation-datasets/images_valid/masks_valid"),
 ]
 
-# full_dataset = KvasirDataset(IMAGE_DIR, MASK_DIR, transform=None)
 full_dataset = PolypDataset(datasets, transform=None)
 
 train_size = int(0.8 * len(full_dataset))
@@ -728,18 +717,18 @@ class ResUNet(nn.Module):
         base_model = models.resnet34(weights=models.ResNet34_Weights.IMAGENET1K_V1)
         base_layers = list(base_model.children())
 
-        self.layer0 = nn.Sequential(*base_layers[:3])  # [B, 64, 128, 128]
-        self.layer1 = nn.Sequential(*base_layers[3:5]) # [B, 64, 64, 64]
-        self.layer2 = base_layers[5]                    # [B, 128, 32, 32]
-        self.layer3 = base_layers[6]                    # [B, 256, 16, 16]
-        self.layer4 = base_layers[7]                    # [B, 512, 8, 8]
+        self.layer0 = nn.Sequential(*base_layers[:3])  
+        self.layer1 = nn.Sequential(*base_layers[3:5]) 
+        self.layer2 = base_layers[5]                    
+        self.layer3 = base_layers[6]                   
+        self.layer4 = base_layers[7]                   
 
-        self.upsample4 = self._upsample(512, 256)      # 8->16
-        self.upsample3 = self._upsample(256, 128)      # 16->32
-        self.upsample2 = self._upsample(128, 64)       # 32->64
-        self.upsample1 = self._upsample(64, 64)        # 64->128
+        self.upsample4 = self._upsample(512, 256)    
+        self.upsample3 = self._upsample(256, 128)     
+        self.upsample2 = self._upsample(128, 64)      
+        self.upsample1 = self._upsample(64, 64)       
 
-        # Additional upsample to go from 128->256 (to reach original input size)
+        
         self.upsample0 = self._upsample(64, 64)        
 
         self.final_conv = nn.Conv2d(64, n_classes, kernel_size=1)
@@ -751,30 +740,40 @@ class ResUNet(nn.Module):
         )
 
     def forward(self, x):
-        x0 = self.layer0(x)  # 128x128
-        x1 = self.layer1(x0) # 64x64
-        x2 = self.layer2(x1) # 32x32
-        x3 = self.layer3(x2) # 16x16
-        x4 = self.layer4(x3) # 8x8
+        x0 = self.layer0(x)  
+        x1 = self.layer1(x0) 
+        x2 = self.layer2(x1) 
+        x3 = self.layer3(x2) 
+        x4 = self.layer4(x3) 
 
-        x = self.upsample4(x4) + x3  # 16x16
-        x = self.upsample3(x) + x2   # 32x32
-        x = self.upsample2(x) + x1   # 64x64
-        x = self.upsample1(x) + x0   # 128x128
-        x = self.upsample0(x)        # 256x256
+        x = self.upsample4(x4) + x3  
+        x = self.upsample3(x) + x2  
+        x = self.upsample2(x) + x1  
+        x = self.upsample1(x) + x0  
+        x = self.upsample0(x)       
 
-        return self.final_conv(x)    # [B, n_classes, 256, 256]
+        return self.final_conv(x)    
 
 ```
 
 
 ```python
+def dice_loss_from_logits_1c(logits, target, eps=1e-6):
+    
+    prob = torch.sigmoid(logits)
+    inter = (prob*target).sum(dim=(1,2,3))
+    den   = prob.sum(dim=(1,2,3)) + target.sum(dim=(1,2,3))
+    return 1 - ((2*inter + eps) / (den + eps)).mean()
+
+def dice_coeff(pred, target):
+    smooth = 1.
+    pred = torch.sigmoid(pred)
+    pred = (pred > 0.5).float()
+    target = target.float()
+    intersection = (pred * target).sum()
+    return (2. * intersection + smooth) / (pred.sum() + target.sum() + smooth)
+
 def iou_score(pred, target, threshold=0.5, smooth=1e-6):
-    """
-    Compute IoU for binary segmentation.
-    pred: logits or probabilities of shape [B, H, W] or [B, 1, H, W]
-    target: binary mask [B, H, W]
-    """
     pred = torch.sigmoid(pred) if pred.dim() == 4 else pred  # apply sigmoid if logits
     pred = (pred > threshold).float()
     target = target.float()
@@ -789,6 +788,37 @@ def iou_score(pred, target, threshold=0.5, smooth=1e-6):
 
 
 ```python
+def plot_res(train_losses,val_losses,val_dice,val_iou):
+    fig, axes = plt.subplots(3, 1, figsize=(10, 15))
+    
+    # --- Loss ---
+    axes[0].plot(train_losses, label="Train Loss")
+    axes[0].plot(val_losses, label="Val Loss")
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Loss")
+    axes[0].legend()
+    axes[0].set_title("Learning Curve - Loss")
+    
+    # --- Dice ---
+    axes[1].plot(val_dice, label="Val Dice")
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Dice Coefficient")
+    axes[1].legend()
+    axes[1].set_title("Learning Curve - Dice Score")
+    
+    # --- IOU ---
+    axes[2].plot(val_iou, label="Val IOU")
+    axes[2].set_xlabel("Epoch")
+    axes[2].set_ylabel("IOU metric")
+    axes[2].legend()
+    axes[2].set_title("Learning Curve - IOU Score")
+    
+    plt.tight_layout()
+    plt.show()
+```
+
+
+```python
 import torch.optim as optim
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -797,26 +827,20 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = ResUNet(n_classes=2).to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
-def dice_coeff(pred, target):
-    smooth = 1.
-    pred = torch.sigmoid(pred)
-    pred = (pred > 0.5).float()
-    target = target.float()
-    intersection = (pred * target).sum()
-    return (2. * intersection + smooth) / (pred.sum() + target.sum() + smooth)
-
 train_losses, val_losses, val_dice,val_iou = [], [], [],[]
+best_val_dice = 0.0
+num_epochs = 20
 
-for epoch in range(10):
+for epoch in range(num_epochs):
     model.train()
     train_loss = 0
     for images, masks in tqdm(train_loader):
         images = images.to(device)
-        # Convert masks to binary 0/1 long tensor
+        
         masks = (masks > 0).long().to(device)
 
         optimizer.zero_grad()
-        outputs = model(images)  # outputs shape: [B, 2, 256, 256]
+        outputs = model(images)  
         loss = F.cross_entropy(outputs, masks)
         loss.backward()
         optimizer.step()
@@ -839,6 +863,11 @@ for epoch in range(10):
     val_losses.append(val_loss / len(val_loader))
     val_dice.append(dice / len(val_loader))
     val_iou.append(iou/ len(val_loader))
+
+    if dice > best_val_dice:
+        best_val_dice = dice
+        torch.save(model.state_dict(), "base_model.pth")
+        print("✅ Saved best model!")
     
 
     print(f"Epoch {epoch+1} | Train Loss: {train_losses[-1]:.4f} | Val Loss: {val_losses[-1]:.4f} | Dice: {val_dice[-1]:.4f} | IOU: {val_iou[-1]:.4f}")
@@ -846,100 +875,475 @@ for epoch in range(10):
 ```
 
     Downloading: "https://download.pytorch.org/models/resnet34-b627a593.pth" to /root/.cache/torch/hub/checkpoints/resnet34-b627a593.pth
-    100%|██████████| 83.3M/83.3M [00:00<00:00, 186MB/s]
-    100%|██████████| 2395/2395 [02:24<00:00, 16.61it/s]
+    100%|██████████| 83.3M/83.3M [00:01<00:00, 77.4MB/s]
+    100%|██████████| 2395/2395 [02:24<00:00, 16.56it/s]
     
 
-    Epoch 1 | Train Loss: 0.1158 | Val Loss: 0.0627 | Dice: 0.8801 | IOU: 0.6787
+    ✅ Saved best model!
+    Epoch 1 | Train Loss: 0.1186 | Val Loss: 0.0669 | Dice: 0.8716 | IOU: 0.7335
     
 
-    100%|██████████| 2395/2395 [02:21<00:00, 16.95it/s]
+    100%|██████████| 2395/2395 [02:24<00:00, 16.53it/s]
     
 
-    Epoch 2 | Train Loss: 0.0568 | Val Loss: 0.0599 | Dice: 0.8903 | IOU: 0.7664
+    Epoch 2 | Train Loss: 0.0583 | Val Loss: 0.0796 | Dice: 0.8556 | IOU: 0.7601
     
 
-    100%|██████████| 2395/2395 [02:21<00:00, 16.92it/s]
+    100%|██████████| 2395/2395 [02:25<00:00, 16.42it/s]
     
 
-    Epoch 3 | Train Loss: 0.0437 | Val Loss: 0.0482 | Dice: 0.9092 | IOU: 0.7673
+    ✅ Saved best model!
+    Epoch 3 | Train Loss: 0.0444 | Val Loss: 0.0547 | Dice: 0.8893 | IOU: 0.7844
     
 
-    100%|██████████| 2395/2395 [02:21<00:00, 16.98it/s]
+    100%|██████████| 2395/2395 [02:25<00:00, 16.48it/s]
     
 
-    Epoch 4 | Train Loss: 0.0366 | Val Loss: 0.0430 | Dice: 0.9207 | IOU: 0.7902
+    ✅ Saved best model!
+    Epoch 4 | Train Loss: 0.0372 | Val Loss: 0.0446 | Dice: 0.9095 | IOU: 0.8128
     
 
-    100%|██████████| 2395/2395 [02:20<00:00, 17.01it/s]
+    100%|██████████| 2395/2395 [02:24<00:00, 16.53it/s]
     
 
-    Epoch 5 | Train Loss: 0.0321 | Val Loss: 0.0571 | Dice: 0.9043 | IOU: 0.8094
+    ✅ Saved best model!
+    Epoch 5 | Train Loss: 0.0326 | Val Loss: 0.0453 | Dice: 0.9130 | IOU: 0.7988
     
 
-    100%|██████████| 2395/2395 [02:20<00:00, 16.99it/s]
+    100%|██████████| 2395/2395 [02:24<00:00, 16.59it/s]
     
 
-    Epoch 6 | Train Loss: 0.0311 | Val Loss: 0.0393 | Dice: 0.9295 | IOU: 0.8084
+    ✅ Saved best model!
+    Epoch 6 | Train Loss: 0.0297 | Val Loss: 0.0415 | Dice: 0.9209 | IOU: 0.8302
     
 
-    100%|██████████| 2395/2395 [02:21<00:00, 16.98it/s]
+    100%|██████████| 2395/2395 [02:23<00:00, 16.75it/s]
     
 
-    Epoch 7 | Train Loss: 0.0248 | Val Loss: 0.0432 | Dice: 0.9228 | IOU: 0.8103
+    Epoch 7 | Train Loss: 0.0268 | Val Loss: 0.0444 | Dice: 0.9153 | IOU: 0.8138
     
 
-    100%|██████████| 2395/2395 [02:20<00:00, 17.00it/s]
+    100%|██████████| 2395/2395 [02:23<00:00, 16.71it/s]
     
 
-    Epoch 8 | Train Loss: 0.0268 | Val Loss: 0.0385 | Dice: 0.9318 | IOU: 0.8219
+    ✅ Saved best model!
+    Epoch 8 | Train Loss: 0.0259 | Val Loss: 0.0402 | Dice: 0.9313 | IOU: 0.8318
     
 
-    100%|██████████| 2395/2395 [02:21<00:00, 16.88it/s]
+    100%|██████████| 2395/2395 [02:23<00:00, 16.65it/s]
     
 
-    Epoch 9 | Train Loss: 0.0225 | Val Loss: 0.0358 | Dice: 0.9393 | IOU: 0.8374
+    ✅ Saved best model!
+    Epoch 9 | Train Loss: 0.0240 | Val Loss: 0.0375 | Dice: 0.9324 | IOU: 0.8361
     
 
-    100%|██████████| 2395/2395 [02:21<00:00, 16.91it/s]
+    100%|██████████| 2395/2395 [02:22<00:00, 16.79it/s]
     
 
-    Epoch 10 | Train Loss: 0.0220 | Val Loss: 0.0384 | Dice: 0.9366 | IOU: 0.8324
+    Epoch 10 | Train Loss: 0.0218 | Val Loss: 0.0441 | Dice: 0.9275 | IOU: 0.8189
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.70it/s]
+    
+
+    Epoch 11 | Train Loss: 0.0220 | Val Loss: 0.0448 | Dice: 0.9246 | IOU: 0.8078
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.73it/s]
+    
+
+    Epoch 12 | Train Loss: 0.0192 | Val Loss: 0.0474 | Dice: 0.9195 | IOU: 0.8193
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.66it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 13 | Train Loss: 0.0191 | Val Loss: 0.0370 | Dice: 0.9431 | IOU: 0.8552
+    
+
+    100%|██████████| 2395/2395 [02:22<00:00, 16.75it/s]
+    
+
+    Epoch 14 | Train Loss: 0.0165 | Val Loss: 0.0421 | Dice: 0.9269 | IOU: 0.8307
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.74it/s]
+    
+
+    Epoch 15 | Train Loss: 0.0168 | Val Loss: 0.0354 | Dice: 0.9419 | IOU: 0.8679
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.65it/s]
+    
+
+    Epoch 16 | Train Loss: 0.0164 | Val Loss: 0.0403 | Dice: 0.9400 | IOU: 0.8548
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.69it/s]
+    
+
+    Epoch 17 | Train Loss: 0.0170 | Val Loss: 0.0422 | Dice: 0.9382 | IOU: 0.8442
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.66it/s]
+    
+
+    Epoch 18 | Train Loss: 0.0155 | Val Loss: 0.0379 | Dice: 0.9424 | IOU: 0.8599
+    
+
+    100%|██████████| 2395/2395 [02:24<00:00, 16.62it/s]
+    
+
+    Epoch 19 | Train Loss: 0.0130 | Val Loss: 0.0409 | Dice: 0.9409 | IOU: 0.8629
+    
+
+    100%|██████████| 2395/2395 [02:23<00:00, 16.70it/s]
+    
+
+    Epoch 20 | Train Loss: 0.0129 | Val Loss: 0.0400 | Dice: 0.9411 | IOU: 0.8637
     
 
 
 ```python
-fig, axes = plt.subplots(3, 1, figsize=(10, 15))  # 3 rows, 1 column
-
-# --- Loss ---
-axes[0].plot(train_losses, label="Train Loss")
-axes[0].plot(val_losses, label="Val Loss")
-axes[0].set_xlabel("Epoch")
-axes[0].set_ylabel("Loss")
-axes[0].legend()
-axes[0].set_title("Learning Curve - Loss")
-
-# --- Dice ---
-axes[1].plot(val_dice, label="Val Dice")
-axes[1].set_xlabel("Epoch")
-axes[1].set_ylabel("Dice Coefficient")
-axes[1].legend()
-axes[1].set_title("Learning Curve - Dice Score")
-
-# --- IOU ---
-axes[2].plot(val_iou, label="Val IOU")
-axes[2].set_xlabel("Epoch")
-axes[2].set_ylabel("IOU metric")
-axes[2].legend()
-axes[2].set_title("Learning Curve - IOU Score")
-
-plt.tight_layout()
-plt.show()
+plot_res(train_losses,val_losses,val_dice,val_iou)
 ```
 
 
     
-![png](Kvasir-SEG_files/Kvasir-SEG_46_0.png)
+![png](Kvasir-SEG_files/Kvasir-SEG_47_0.png)
+    
+
+
+
+```python
+def predict_tta(model, x):
+    outs=[]
+    with torch.no_grad():
+        o = model(x)
+        outs.append(o)
+        o = model(torch.flip(x,[3]));        outs.append(torch.flip(o,[3]))
+        o = model(torch.flip(x,[2]));        outs.append(torch.flip(o,[2]))
+        o = model(x.transpose(2,3));         outs.append(model(x.transpose(2,3)).transpose(2,3))
+    return torch.stack(outs).mean(0) 
+```
+
+
+```python
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = ResUNet(n_classes=1).to(device)
+train_losses, val_losses, val_dice,val_iou = [], [], [],[]
+
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, mode="min", factor=0.5, patience=3, verbose=True
+)
+
+pos_w = torch.tensor([2.0], device=device) 
+best_val_dice = 0.0
+
+
+for epoch in range(num_epochs):
+    
+    model.train()
+    train_loss = 0.0
+    for images, masks in tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} [Train]"):
+        images = images.to(device)                                 
+        masks  = (masks > 0).float().unsqueeze(1).to(device)       
+
+        optimizer.zero_grad()
+        logits = model(images)                                    
+
+        bce  = F.binary_cross_entropy_with_logits(logits, masks, pos_weight=pos_w)
+        loss = bce + 0.5 * dice_loss_from_logits_1c(logits, masks)
+
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+
+        train_loss += loss.item()
+
+   
+    model.eval()
+    val_loss, dice, iou = 0.0, 0.0, 0.0
+    with torch.no_grad():
+        for images, masks in tqdm(val_loader, desc=f"Epoch {epoch+1}/{num_epochs} [Val]"):
+            images = images.to(device)
+            masks  = (masks > 0).float().unsqueeze(1).to(device)  
+
+            logits = predict_tta(model, images)
+
+            bce  = F.binary_cross_entropy_with_logits(logits, masks, pos_weight=pos_w)
+            loss = bce + 0.5 * dice_loss_from_logits_1c(logits, masks)
+
+            val_loss += loss.item()
+            dice += dice_coeff(logits, masks).item()
+            iou  += iou_score(logits, masks)
+
+    
+    train_loss /= len(train_loader)
+    val_loss /= len(val_loader)
+    dice /= len(val_loader)
+    iou  /= len(val_loader)
+
+    train_losses.append(train_loss)
+    val_losses.append(val_loss)
+    val_dice.append(dice)
+    val_iou.append(iou)
+
+   
+    scheduler.step(val_loss)
+
+    
+    if dice > best_val_dice:
+        best_val_dice = dice
+        torch.save(model.state_dict(), "best_model.pth")
+        print("✅ Saved best model!")
+
+    
+    print(f"Epoch {epoch+1}/{num_epochs} | "
+          f"Train {train_loss:.4f} | Val {val_loss:.4f} | "
+          f"Dice {dice:.4f} | IoU {iou:.4f} | LR {optimizer.param_groups[0]['lr']:.2e}")
+```
+
+    /usr/local/lib/python3.11/dist-packages/torch/optim/lr_scheduler.py:62: UserWarning: The verbose parameter is deprecated. Please use get_last_lr() to access the learning rate.
+      warnings.warn(
+    Epoch 1/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.45it/s]
+    Epoch 1/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.15it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 1/20 | Train 0.3219 | Val 0.1693 | Dice 0.8998 | IoU 0.9055 | LR 1.00e-04
+    
+
+    Epoch 2/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.43it/s]
+    Epoch 2/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.19it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 2/20 | Train 0.1615 | Val 0.1322 | Dice 0.9192 | IoU 0.9186 | LR 1.00e-04
+    
+
+    Epoch 3/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.47it/s]
+    Epoch 3/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.21it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 3/20 | Train 0.1196 | Val 0.1135 | Dice 0.9327 | IoU 0.9297 | LR 1.00e-04
+    
+
+    Epoch 4/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.45it/s]
+    Epoch 4/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.21it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 4/20 | Train 0.0984 | Val 0.0967 | Dice 0.9416 | IoU 0.9374 | LR 1.00e-04
+    
+
+    Epoch 5/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.50it/s]
+    Epoch 5/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.20it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 5/20 | Train 0.0833 | Val 0.0964 | Dice 0.9439 | IoU 0.9401 | LR 1.00e-04
+    
+
+    Epoch 6/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.48it/s]
+    Epoch 6/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.19it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 6/20 | Train 0.0727 | Val 0.0854 | Dice 0.9482 | IoU 0.9429 | LR 1.00e-04
+    
+
+    Epoch 7/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.43it/s]
+    Epoch 7/20 [Val]: 100%|██████████| 599/599 [00:54<00:00, 11.09it/s]
+    
+
+    Epoch 7/20 | Train 0.0646 | Val 0.0916 | Dice 0.9477 | IoU 0.9446 | LR 1.00e-04
+    
+
+    Epoch 8/20 [Train]: 100%|██████████| 2395/2395 [02:26<00:00, 16.32it/s]
+    Epoch 8/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.20it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 8/20 | Train 0.0586 | Val 0.0864 | Dice 0.9514 | IoU 0.9472 | LR 1.00e-04
+    
+
+    Epoch 9/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.51it/s]
+    Epoch 9/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.20it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 9/20 | Train 0.0539 | Val 0.0802 | Dice 0.9552 | IoU 0.9500 | LR 1.00e-04
+    
+
+    Epoch 10/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.49it/s]
+    Epoch 10/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.14it/s]
+    
+
+    Epoch 10/20 | Train 0.0486 | Val 0.0892 | Dice 0.9531 | IoU 0.9493 | LR 1.00e-04
+    
+
+    Epoch 11/20 [Train]: 100%|██████████| 2395/2395 [02:32<00:00, 15.75it/s]
+    Epoch 11/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.11it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 11/20 | Train 0.0452 | Val 0.0755 | Dice 0.9572 | IoU 0.9518 | LR 1.00e-04
+    
+
+    Epoch 12/20 [Train]: 100%|██████████| 2395/2395 [02:27<00:00, 16.29it/s]
+    Epoch 12/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.19it/s]
+    
+
+    Epoch 12/20 | Train 0.0435 | Val 0.0787 | Dice 0.9571 | IoU 0.9520 | LR 1.00e-04
+    
+
+    Epoch 13/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.42it/s]
+    Epoch 13/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.18it/s]
+    
+
+    Epoch 13/20 | Train 0.0388 | Val 0.0814 | Dice 0.9565 | IoU 0.9524 | LR 1.00e-04
+    
+
+    Epoch 14/20 [Train]: 100%|██████████| 2395/2395 [02:26<00:00, 16.40it/s]
+    Epoch 14/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.16it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 14/20 | Train 0.0391 | Val 0.0708 | Dice 0.9588 | IoU 0.9546 | LR 1.00e-04
+    
+
+    Epoch 15/20 [Train]: 100%|██████████| 2395/2395 [02:26<00:00, 16.39it/s]
+    Epoch 15/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.19it/s]
+    
+
+    Epoch 15/20 | Train 0.0353 | Val 0.0842 | Dice 0.9559 | IoU 0.9528 | LR 1.00e-04
+    
+
+    Epoch 16/20 [Train]: 100%|██████████| 2395/2395 [02:26<00:00, 16.33it/s]
+    Epoch 16/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.16it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 16/20 | Train 0.0344 | Val 0.0706 | Dice 0.9606 | IoU 0.9552 | LR 1.00e-04
+    
+
+    Epoch 17/20 [Train]: 100%|██████████| 2395/2395 [02:26<00:00, 16.36it/s]
+    Epoch 17/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.19it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 17/20 | Train 0.0337 | Val 0.0756 | Dice 0.9608 | IoU 0.9563 | LR 1.00e-04
+    
+
+    Epoch 18/20 [Train]: 100%|██████████| 2395/2395 [02:26<00:00, 16.31it/s]
+    Epoch 18/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.20it/s]
+    
+
+    Epoch 18/20 | Train 0.0303 | Val 0.0768 | Dice 0.9606 | IoU 0.9564 | LR 1.00e-04
+    
+
+    Epoch 19/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.44it/s]
+    Epoch 19/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.20it/s]
+    
+
+    ✅ Saved best model!
+    Epoch 19/20 | Train 0.0306 | Val 0.0649 | Dice 0.9625 | IoU 0.9573 | LR 1.00e-04
+    
+
+    Epoch 20/20 [Train]: 100%|██████████| 2395/2395 [02:25<00:00, 16.45it/s]
+    Epoch 20/20 [Val]: 100%|██████████| 599/599 [00:53<00:00, 11.17it/s]
+    
+
+    Epoch 20/20 | Train 0.0285 | Val 0.0833 | Dice 0.9592 | IoU 0.9554 | LR 1.00e-04
+    
+
+
+```python
+plot_res(train_losses,val_losses,val_dice,val_iou)
+```
+
+
+    
+![png](Kvasir-SEG_files/Kvasir-SEG_50_0.png)
+    
+
+
+
+```python
+def show_samples(model, dataloader, device, num_samples=4, thr=0.5):
+    model.eval()
+    images, masks = next(iter(dataloader))  
+    images = images.to(device)
+    masks  = (masks > 0).float().to(device)  
+
+    with torch.no_grad():
+        outputs = model(images)              
+
+        if outputs.shape[1] == 1: 
+            probs = torch.sigmoid(outputs)
+            preds = (probs > thr).float()
+        else:                     
+            probs = torch.softmax(outputs, dim=1)[:,1:2]
+            preds = (probs > thr).float()
+
+    images = images.cpu().permute(0,2,3,1).numpy()
+    masks  = masks.cpu().squeeze().numpy()
+    preds  = preds.cpu().squeeze().numpy()
+
+    for i in range(num_samples):
+        plt.figure(figsize=(12,4))
+        plt.subplot(1,3,1)
+        plt.imshow((images[i]*0.229+0.485).clip(0,1)) 
+        plt.title("Image")
+        plt.axis("off")
+
+        plt.subplot(1,3,2)
+        plt.imshow(masks[i], cmap="gray")
+        plt.title("Ground Truth")
+        plt.axis("off")
+
+        plt.subplot(1,3,3)
+        plt.imshow(preds[i], cmap="gray")
+        plt.title("Prediction")
+        plt.axis("off")
+        plt.show()
+
+
+
+show_samples(model, val_loader, device, num_samples=5, thr=0.5)
+```
+
+
+    
+![png](Kvasir-SEG_files/Kvasir-SEG_51_0.png)
+    
+
+
+
+    
+![png](Kvasir-SEG_files/Kvasir-SEG_51_1.png)
+    
+
+
+
+    
+![png](Kvasir-SEG_files/Kvasir-SEG_51_2.png)
+    
+
+
+
+    
+![png](Kvasir-SEG_files/Kvasir-SEG_51_3.png)
+    
+
+
+
+    
+![png](Kvasir-SEG_files/Kvasir-SEG_51_4.png)
     
 
 
