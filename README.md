@@ -1,4 +1,4 @@
-﻿# endoscopy-polyps-segmentation
+﻿# colonoscopy-polyps-segmentation
 ## Introduction
 Colorectal cancer is one of the leading causes of cancer-related deaths worldwide, and early detection of polyps through colonoscopy plays a crucial role in prevention. However, manual polyp identification and segmentation during endoscopic procedures can be time-consuming, subjective, and prone to human error. Automated segmentation methods powered by deep learning can provide accurate, real-time support to clinicians by highlighting polyps and improving diagnostic reliability.
 
@@ -238,8 +238,8 @@ The enhanced ResUNet achieved **significantly better performance** compared to t
 
 | Metric              | Baseline UNet | Enhanced ResUNet |
 | :------------------ | :-----------: | :--------------: |
-| **Validation IoU**  |     \~0.94    |    **0.9541**    |
-| **Validation Dice** |     \~0.86    |    **0.9587**    |
+| **Validation IoU**  |     \~0.86    |    **0.9541**    |
+| **Validation Dice** |     \~0.94    |    **0.9587**    |
 | **Validation Loss** |      0.04     |    **0.0682**    |
 
 * **IoU** improved dramatically from \~0.86 to **0.95**, showing much better overlap between predicted and ground truth masks.
