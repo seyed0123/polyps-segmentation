@@ -38,3 +38,7 @@ ipython_config.py
 *.pth
 /infer/res
 /infer/img
+
+__pycache__/
+*.py[cod]
+/captures/
