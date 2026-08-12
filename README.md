@@ -1,4 +1,73 @@
 ﻿# colonoscopy-polyps-segmentation
+## Native webcam application
+
+The native desktop app displays a large webcam monitor, overlays predicted polyp pixels
+in red, and performs model inference in a dedicated process. Drop your checkpoint at
+`model.pth` (state dict, saved PyTorch module, and TorchScript are supported), install
+the dependencies, and start it:
+
+For CPU computers, create the included isolated Conda environment (do not use the
+Anaconda `base` environment):
+
+```bash
+conda env create -f environment-cpu.yml
+conda activate polyp-monitor
+python app.py --model model.pth --target-fps 12
+```
+
+CPU is the desktop application's default. A GPU installation can opt in with
+`--device cuda` after installing the matching CUDA build of PyTorch.
+
+For CPU performance, the app uses four inference threads by default. Depending on the
+client CPU, compare `--cpu-threads 4`, `--cpu-threads 8`, and `--cpu-threads 12`; use
+the setting with the lowest displayed **Inference** time.
+
+The application opens its own desktop window and reads camera `0` by default. Clicking
+the monitor or the button saves only the original camera frame under `captures/manual/`.
+A mask covering at least 2% of the image triggers a two-tone alert when it first
+appears. After three consecutive detected frames, the app saves one overlay image under
+`captures/automatic/`; it does not save separate raw images or masks. Tune these values
+with `--auto-save-ratio`, `--consecutive-frames`, and `--cooldown`.
+
+Select a different webcam with `--camera 1` (or another camera index). The desktop GUI
+uses three independent processes: camera capture, GUI, and model inference. Both camera
+and inference queues keep only the newest frame, preventing stale video from building
+latency. The app requests MJPEG at 30 camera FPS by default; override it with
+`--camera-fps` if required by a particular capture device.
+
+### Directory inference
+
+Use the same model code to process either one image or an entire directory:
+
+```bash
+python -m infer.inference path/to/images --model model.pth --output infer/res --save-masks
+```
+
+Run `python app.py --help` and `python -m infer.inference --help` for all options.
+
+### Build a Windows installer
+
+PyInstaller is not a cross-compiler, so create the Windows executable on a 64-bit
+Windows machine or Windows VM. Copy the repository and final `model.pth` there, open
+Anaconda Prompt, and run:
+
+```bat
+conda env create -f environment-cpu.yml
+conda activate polyp-monitor
+packaging\build-windows.bat
+```
+
+Test `dist\PolypMonitor\PolypMonitor.exe` while keeping the complete
+`dist\PolypMonitor` directory together. PyTorch makes this directory relatively large.
+To turn it into one normal installer, install Inno Setup 6, open
+`packaging\installer.iss`, and choose **Build > Compile**. The distributable installer
+will be `installer-output\PolypMonitor-Setup.exe`.
+
+The installed application needs no Conda, Python, source files, or separate model file.
+Its captures are written to `Documents\PolypMonitorCaptures`. Packaging discourages
+casual source access, but Python applications and embedded model weights can still be
+reverse-engineered; an executable is not a secure model-protection boundary.
+
 ## Introduction
 Colorectal cancer is one of the leading causes of cancer-related deaths worldwide, and early detection of polyps through colonoscopy plays a crucial role in prevention. However, manual polyp identification and segmentation during endoscopic procedures can be time-consuming, subjective, and prone to human error. Automated segmentation methods powered by deep learning can provide accurate, real-time support to clinicians by highlighting polyps and improving diagnostic reliability.
 
